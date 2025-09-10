@@ -1,0 +1,62 @@
+
+[
+    {
+      "error": "container port not specified",
+      "cause": "Pods need to define containerPort so Kubernetes knows how to route traffic to the container.",
+      "solutions": [
+        "Add ports: - containerPort: 80 under spec.containers in the Pod YAML",
+        "Verify that your Service targetPort matches the Pod containerPort"
+      ],
+      "next_steps": [
+        "kubectl describe pod <pod-name>",
+        "kubectl get svc"
+      ],
+      "snippet": "ports:\n  - containerPort: 80",
+      "tags": ["pods", "networking"]
+    },
+    {
+      "error": "ImagePullBackOff",
+      "cause": "Kubernetes cannot pull the container image, usually due to a wrong image name, missing tag, or lack of registry access.",
+      "solutions": [
+        "Check if the image name and tag are correct",
+        "Run docker pull <image-name> locally to test",
+        "If using a private registry, create a Kubernetes Secret and reference it"
+      ],
+      "next_steps": [
+        "kubectl describe pod <pod-name>",
+        "kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 10"
+      ],
+      "snippet": "image: nginx:latest",
+      "tags": ["pods", "images"]
+    },
+    {
+      "error": "CrashLoopBackOff",
+      "cause": "The container starts but repeatedly crashes, often due to bad command, missing files, or misconfiguration inside the container.",
+      "solutions": [
+        "Check container logs for errors",
+        "Verify that the container command/entrypoint is correct",
+        "Ensure required config files or environment variables are available"
+      ],
+      "next_steps": [
+        "kubectl logs <pod-name>",
+        "kubectl describe pod <pod-name>"
+      ],
+      "snippet": "command: [\"nginx\", \"-g\", \"daemon off;\"]",
+      "tags": ["pods", "crash", "debugging"]
+    },
+    {
+      "error": "Pending state pod",
+      "cause": "Pod is created but cannot be scheduled, usually due to insufficient cluster resources or missing node selectors.",
+      "solutions": [
+        "Check if nodes have enough CPU/memory",
+        "Verify nodeSelector or affinity settings",
+        "Ensure PVCs (PersistentVolumeClaims) are bound if used"
+      ],
+      "next_steps": [
+        "kubectl get nodes",
+        "kubectl describe pod <pod-name>"
+      ],
+      "snippet": "resources:\n  requests:\n    cpu: \"100m\"\n    memory: \"128Mi\"",
+      "tags": ["pods", "scheduling", "resources"]
+    }
+  ]
