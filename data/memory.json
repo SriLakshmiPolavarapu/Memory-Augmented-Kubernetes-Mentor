@@ -1,62 +1,166 @@
-
 [
-    {
-      "error": "container port not specified",
-      "cause": "Pods need to define containerPort so Kubernetes knows how to route traffic to the container.",
-      "solutions": [
-        "Add ports: - containerPort: 80 under spec.containers in the Pod YAML",
-        "Verify that your Service targetPort matches the Pod containerPort"
-      ],
-      "next_steps": [
-        "kubectl describe pod <pod-name>",
-        "kubectl get svc"
-      ],
-      "snippet": "ports:\n  - containerPort: 80",
-      "tags": ["pods", "networking"]
-    },
-    {
-      "error": "ImagePullBackOff",
-      "cause": "Kubernetes cannot pull the container image, usually due to a wrong image name, missing tag, or lack of registry access.",
-      "solutions": [
-        "Check if the image name and tag are correct",
-        "Run docker pull <image-name> locally to test",
-        "If using a private registry, create a Kubernetes Secret and reference it"
-      ],
-      "next_steps": [
-        "kubectl describe pod <pod-name>",
-        "kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 10"
-      ],
-      "snippet": "image: nginx:latest",
-      "tags": ["pods", "images"]
-    },
-    {
-      "error": "CrashLoopBackOff",
-      "cause": "The container starts but repeatedly crashes, often due to bad command, missing files, or misconfiguration inside the container.",
-      "solutions": [
-        "Check container logs for errors",
-        "Verify that the container command/entrypoint is correct",
-        "Ensure required config files or environment variables are available"
-      ],
-      "next_steps": [
-        "kubectl logs <pod-name>",
-        "kubectl describe pod <pod-name>"
-      ],
-      "snippet": "command: [\"nginx\", \"-g\", \"daemon off;\"]",
-      "tags": ["pods", "crash", "debugging"]
-    },
-    {
-      "error": "Pending state pod",
-      "cause": "Pod is created but cannot be scheduled, usually due to insufficient cluster resources or missing node selectors.",
-      "solutions": [
-        "Check if nodes have enough CPU/memory",
-        "Verify nodeSelector or affinity settings",
-        "Ensure PVCs (PersistentVolumeClaims) are bound if used"
-      ],
-      "next_steps": [
-        "kubectl get nodes",
-        "kubectl describe pod <pod-name>"
-      ],
-      "snippet": "resources:\n  requests:\n    cpu: \"100m\"\n    memory: \"128Mi\"",
-      "tags": ["pods", "scheduling", "resources"]
-    }
-  ]
+  {
+    "error": "container port not specified",
+    "cause": "Pods need to define containerPort so Kubernetes knows how to route traffic to the container.",
+    "solutions": [
+      "Add ports: - containerPort: 80 under spec.containers in the Pod YAML",
+      "Verify that your Service targetPort matches the Pod containerPort"
+    ],
+    "next_steps": [
+      "kubectl describe pod <pod-name>",
+      "kubectl get svc"
+    ],
+    "snippet": "ports:\n  - containerPort: 80",
+    "tags": ["pods", "networking"]
+  },
+  {
+    "error": "ImagePullBackOff",
+    "cause": "Kubernetes cannot pull the container image, usually due to a wrong image name, missing tag, or lack of registry access.",
+    "solutions": [
+      "Check if the image name and tag are correct",
+      "Run docker pull <image-name> locally to test",
+      "If using a private registry, create a Kubernetes Secret and reference it"
+    ],
+    "next_steps": [
+      "kubectl describe pod <pod-name>",
+      "kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 10"
+    ],
+    "snippet": "image: nginx:latest",
+    "tags": ["pods", "images"]
+  },
+  {
+    "error": "CrashLoopBackOff",
+    "cause": "The container starts but repeatedly crashes, often due to bad command, missing files, or misconfiguration inside the container.",
+    "solutions": [
+      "Check container logs for errors",
+      "Verify that the container command/entrypoint is correct",
+      "Ensure required config files or environment variables are available"
+    ],
+    "next_steps": [
+      "kubectl logs <pod-name>",
+      "kubectl describe pod <pod-name>"
+    ],
+    "snippet": "command: [\"nginx\", \"-g\", \"daemon off;\"]",
+    "tags": ["pods", "crash", "debugging"]
+  },
+  {
+    "error": "Pending state pod",
+    "cause": "Pod is created but cannot be scheduled, usually due to insufficient cluster resources or missing node selectors.",
+    "solutions": [
+      "Check if nodes have enough CPU/memory",
+      "Verify nodeSelector or affinity settings",
+      "Ensure PVCs (PersistentVolumeClaims) are bound if used"
+    ],
+    "next_steps": [
+      "kubectl get nodes",
+      "kubectl describe pod <pod-name>"
+    ],
+    "snippet": "resources:\n  requests:\n    cpu: \"100m\"\n    memory: \"128Mi\"",
+    "tags": ["pods", "scheduling", "resources"]
+  },
+  {
+    "error": "NodeNotReady",
+    "cause": "The node is not in Ready state, often due to kubelet issues, network problems, or resource exhaustion.",
+    "solutions": [
+      "Check node status with kubectl get nodes",
+      "Verify kubelet service is running",
+      "Check node's system logs for errors"
+    ],
+    "next_steps": [
+      "kubectl describe node <node-name>",
+      "journalctl -u kubelet"
+    ],
+    "snippet": "Ensure node labels and taints are configured correctly",
+    "tags": ["nodes", "status", "debugging"]
+  },
+  {
+    "error": "OOMKilled",
+    "cause": "Pod was killed because it exceeded the memory limit defined in its spec.",
+    "solutions": [
+      "Check pod's memory usage with kubectl top pod",
+      "Increase memory limits in the pod spec",
+      "Optimize the application memory usage"
+    ],
+    "next_steps": [
+      "kubectl describe pod <pod-name>",
+      "kubectl top pod <pod-name>"
+    ],
+    "snippet": "resources:\n  limits:\n    memory: \"512Mi\"",
+    "tags": ["pods", "resources", "memory"]
+  },
+  {
+    "error": "ErrImagePull",
+    "cause": "The image cannot be pulled due to an invalid image name, tag, or registry access issue.",
+    "solutions": [
+      "Verify the image name and tag",
+      "Run docker pull <image> locally to confirm availability",
+      "Check registry credentials if using a private registry"
+    ],
+    "next_steps": [
+      "kubectl describe pod <pod-name>",
+      "kubectl get events --sort-by=.metadata.creationTimestamp | tail -n 10"
+    ],
+    "snippet": "image: nginx:1.23",
+    "tags": ["pods", "images"]
+  },
+  {
+    "error": "BackOff restarting failed container",
+    "cause": "Container repeatedly fails during startup, causing Kubernetes to back off and retry.",
+    "solutions": [
+      "Check logs with kubectl logs <pod-name>",
+      "Verify entrypoint and command in Dockerfile",
+      "Ensure configuration files or env vars exist"
+    ],
+    "next_steps": [
+      "kubectl describe pod <pod-name>",
+      "kubectl logs <pod-name>"
+    ],
+    "snippet": "command: [\"/bin/sh\", \"-c\", \"echo Hello && sleep 3600\"]",
+    "tags": ["pods", "crash", "restart"]
+  },
+  {
+    "error": "CreateContainerConfigError",
+    "cause": "Pod cannot be created due to invalid configuration, missing secrets, or configmaps.",
+    "solutions": [
+      "Check if referenced secrets/configmaps exist",
+      "Verify volume mounts and environment variable references",
+      "Ensure YAML syntax is correct"
+    ],
+    "next_steps": [
+      "kubectl describe pod <pod-name>",
+      "kubectl get configmap,secret"
+    ],
+    "snippet": "env:\n- name: CONFIG\n  valueFrom:\n    configMapKeyRef:\n      name: my-config\n      key: config.json",
+    "tags": ["pods", "config", "secrets"]
+  },
+  {
+    "error": "ServiceUnavailable",
+    "cause": "Service is deployed but not reachable, often due to missing endpoints or selector mismatch.",
+    "solutions": [
+      "Verify service selector matches pod labels",
+      "Check if pods are running behind the service",
+      "Test connectivity using curl or wget inside a pod"
+    ],
+    "next_steps": [
+      "kubectl describe svc <service-name>",
+      "kubectl get endpoints <service-name>"
+    ],
+    "snippet": "selector:\n  app: my-app",
+    "tags": ["services", "networking"]
+  },
+  {
+    "error": "PVC Pending",
+    "cause": "PersistentVolumeClaim is created but cannot be bound to a PersistentVolume.",
+    "solutions": [
+      "Check if a matching PersistentVolume exists",
+      "Verify storage class is available",
+      "Ensure capacity and access modes match"
+    ],
+    "next_steps": [
+      "kubectl describe pvc <pvc-name>",
+      "kubectl get pv"
+    ],
+    "snippet": "storageClassName: standard\nresources:\n  requests:\n    storage: 1Gi",
+    "tags": ["storage", "PVC", "volumes"]
+  }
+]
