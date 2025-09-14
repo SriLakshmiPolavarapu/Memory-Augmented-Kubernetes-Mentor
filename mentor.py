@@ -1,38 +1,30 @@
-import json
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.metrics.pairwise import cosine_similarity
+import joblib
+from utils import load_memory, preprocess
 
+memory_data = load_memory()
+model = joblib.load("models/error_classifier.pkl")
+vectorizer = joblib.load("models/tfidf_vectorizer.pkl")
 
-with open("data/memory.json", "r") as f:
-    data = json.load(f)
-    
-errors = [entry["error"] for entry in data]
+user_input = input("Enter the Kubernetes error you are getting: ")
+user_input_processed = preprocess(user_input)
+user_vec = vectorizer.transform([user_input_processed])
 
-vectorizer = TfidfVectorizer()
-X = vectorizer.fit_transform(errors)
+predicted_category = model.predict(user_vec)[0]
+probability = model.predict_proba(user_vec).max()
 
-user_input = input("Enter the error you are getting : ")    
-
-user_vec = vectorizer.transform([user_input])
-
-similarities = cosine_similarity(user_vec, X).flatten()
-
-best_idx = similarities.argmax()
-best_score = similarities[best_idx]
-
-if best_score > 0.2:
-    entry = data[best_idx]
-    print(entry["error"])
-    print(" ---> Explanation of the error : ", entry["cause"])
-    for s in entry["solutions"]:
-            print(s)
-    for cmd in entry["next_steps"]:
-            print(cmd)
-    print(" ---> Here is the suggested YAML : ", entry["snippet"]) 
+threshold = 0.3
+if probability >= threshold:
+    entry = next((e for e in memory_data if e["error"] == predicted_category), None)
+    if entry:
+        print("\n--- Error Details ---")
+        print("Error:", entry["error"])
+        print("Explanation:", entry["cause"])
+        print("\nPossible Fixes:")
+        for s in entry["solutions"]:
+            print("-", s)
+        print("\nNext Steps:")
+        for cmd in entry["next_steps"]:
+            print("-", cmd)
+        print("\nSuggested YAML snippet:\n", entry["snippet"])
 else:
-    print(" ---> No match found")
-
-
-        
-        
-
+    print("\nNo confident match found. You may need to check logs or YAML manually.")
